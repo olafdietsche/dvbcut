@@ -1103,6 +1103,48 @@
 	    <string>F1</string>
 	</property>
     </action>
+    <action>
+	<property name="name">
+	    <cstring>frameseqhomeAction</cstring>
+	</property>
+	<property name="text">
+	    <string>&amp;Home</string>
+	</property>
+	<property name="toolTip">
+	    <string>Home</string>
+	</property>
+	<property name="accel">
+	    <string>H</string>
+	</property>
+    </action>
+    <action>
+	<property name="name">
+	    <cstring>frameseqnextAction</cstring>
+	</property>
+	<property name="text">
+	    <string>&amp;Next</string>
+	</property>
+	<property name="toolTip">
+	    <string>Next</string>
+	</property>
+	<property name="accel">
+	    <string>J</string>
+	</property>
+    </action>
+    <action>
+	<property name="name">
+	    <cstring>frameseqprevAction</cstring>
+	</property>
+	<property name="text">
+	    <string>&amp;Previous</string>
+	</property>
+	<property name="toolTip">
+	    <string>Previous</string>
+	</property>
+	<property name="accel">
+	    <string>K</string>
+	</property>
+    </action>
 </actions>
 <images>
     <image name="image0">
@@ -1284,6 +1326,24 @@
     <connection>
         <sender>frameseqhome</sender>
         <signal>clicked()</signal>
+        <receiver>dvbcutbase</receiver>
+        <slot>clickedframeseqhome()</slot>
+    </connection>
+    <connection>
+        <sender>frameseqprevAction</sender>
+        <signal>activated()</signal>
+        <receiver>dvbcutbase</receiver>
+        <slot>clickedframeseqprev()</slot>
+    </connection>
+    <connection>
+        <sender>frameseqnextAction</sender>
+        <signal>activated()</signal>
+        <receiver>dvbcutbase</receiver>
+        <slot>clickedframeseqnext()</slot>
+    </connection>
+    <connection>
+        <sender>frameseqhomeAction</sender>
+        <signal>activated()</signal>
         <receiver>dvbcutbase</receiver>
         <slot>clickedframeseqhome()</slot>
     </connection>
