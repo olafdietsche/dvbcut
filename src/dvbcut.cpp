@@ -51,6 +51,7 @@
 #include <qsettings.h>
 #include <qregexp.h>
 #include <qstatusbar.h>
+#include <qlayout.h>
 
 #include "port.h"
 #include "dvbcut.h"
@@ -68,6 +69,7 @@
 #include "exportdialog.h"
 #include "settings.h"
 #include "exception.h"
+#include "framesequence.h"
 
 #include "version.h"
 
@@ -131,8 +133,19 @@ dvbcut::dvbcut(QWidget *parent, const char *name, WFlags fl)
     jogsliding(false), jogmiddlepic(0),
     mplayer_process(0), imgp(0), busy(0),
     viewscalefactor(1.0),
-    nogui(false)
+    nogui(false),
+    frameseq_(0)
 {
+  frameseq_ = new framesequence(imagedisplay->parentWidget(), settings().frameseq_nframes, this);
+  layout7->addLayout(frameseq_->layout());
+  QStringList distances = QStringList::split(' ', settings().frameseq_distances);
+  for (QStringList::iterator i = distances.begin(); i != distances.end(); ++i)
+    frameseqinput->insertItem(*i);
+
+  frameseqinput->setCurrentText(settings().frameseq_home_distance);
+  frameseqhome->setText(settings().frameseq_home_distance);
+  frameseq_->distance(string2frameno(settings().frameseq_home_distance, 1500));
+  updateframeseqbuttons();
 #ifndef HAVE_LIB_AO
   playAudio1Action->setEnabled(false);
   playAudio2Action->setEnabled(false);
@@ -187,6 +200,8 @@ dvbcut::~dvbcut()
     delete imgp;
   if (mpg)
     delete mpg;
+
+  delete frameseq_;
 }
 
 // **************************************************************************
@@ -1122,6 +1137,11 @@ void dvbcut::playPlay()
   goinput->setEnabled(false);
   gobutton2->setEnabled(false);
   goinput2->setEnabled(false);
+  frameseqbutton->setEnabled(false);
+  frameseqinput->setEnabled(false);
+  frameseqprev->setEnabled(false);
+  frameseqnext->setEnabled(false);
+  frameseqhome->setEnabled(false);
 
 #ifdef HAVE_LIB_AO
 
@@ -1429,15 +1449,8 @@ void dvbcut::eventlistcontextmenu(QListBoxItem *lbi, const QPoint &point)
 void dvbcut::clickedgo()
 {
   QString text=goinput->text();
-  text.stripWhiteSpace();
   bool okay=false;
-  int inpic;
-  if (text.contains(':') || text.contains('.')) {
-    okay=true;
-    inpic=string2pts(text)/getTimePerFrame();
-  }
-  else
-    inpic=text.toInt(&okay,0);
+  int inpic = string2frameno(okay, text);
   if (okay) {
     fine=true;
     linslider->setValue(inpic);
@@ -1449,15 +1462,8 @@ void dvbcut::clickedgo()
 void dvbcut::clickedgo2()
 {
   QString text=goinput2->text();
-  text.stripWhiteSpace();
   bool okay=false;
-  int inpic, outpic;
-  if (text.contains(':') || text.contains('.')) {
-    okay=true;
-    outpic=string2pts(text)/getTimePerFrame();
-  }
-  else
-    outpic=text.toInt(&okay,0);
+  int inpic, outpic = string2frameno(okay, text);
   if (okay && !quick_picture_lookup.empty()) {
     // find the entry in the quick_picture_lookup table that corresponds to given output picture
     quick_picture_lookup_t::iterator it=
@@ -1468,6 +1474,65 @@ void dvbcut::clickedgo2()
     fine=false;
   }
   //goinput2->clear();
+}
+
+void dvbcut::clickedframeseq()
+{
+  QString text = frameseqinput->currentText();
+  bool okay = false;
+  int dist = string2frameno(okay, text);
+  if (okay) {
+    frameseq_->distance(dist);
+    frameseq_->update(curpic);
+    updateframeseqbuttons();
+  }
+  //frameseqinput->clear();
+}
+
+void dvbcut::updateframeseqbuttons()
+{
+  int item = frameseqinput->currentItem();
+  if (item <= 0) {
+    frameseqprev->setEnabled(false);
+    frameseqprev->setText("Previous");
+  } else {
+    frameseqprev->setEnabled(true);
+    QString s = frameseqinput->text(item - 1);
+    frameseqprev->setText(s);
+  }
+
+  if (item >= frameseqinput->count() - 1) {
+    frameseqnext->setEnabled(false);
+    frameseqnext->setText("Next");
+  } else {
+    frameseqnext->setEnabled(true);
+    QString s = frameseqinput->text(item + 1);
+    frameseqnext->setText(s);
+  }
+}
+
+void dvbcut::clickedframeseqprev()
+{
+  int item = frameseqinput->currentItem();
+  if (item > 0) {
+    frameseqinput->setCurrentItem(item - 1);
+    clickedframeseq();
+  }
+}
+
+void dvbcut::clickedframeseqnext()
+{
+  int item = frameseqinput->currentItem();
+  if (item < frameseqinput->count() - 1) {
+    frameseqinput->setCurrentItem(item + 1);
+    clickedframeseq();
+  }
+}
+
+void dvbcut::clickedframeseqhome()
+{
+  frameseqinput->setCurrentText(settings().frameseq_home_distance);
+  clickedframeseq();
 }
 
 void dvbcut::mplayer_exited()
@@ -1492,6 +1557,11 @@ void dvbcut::mplayer_exited()
   goinput->setEnabled(true);
   gobutton2->setEnabled(true);
   goinput2->setEnabled(true);
+  frameseqbutton->setEnabled(true);
+  frameseqinput->setEnabled(true);
+  frameseqprev->setEnabled(true);
+  frameseqnext->setEnabled(true);
+  frameseqhome->setEnabled(true);
 
 #ifdef HAVE_LIB_AO
 
@@ -1580,10 +1650,16 @@ void dvbcut::updateimagedisplay()
   if (showimage) {
     if (!imgp)
       imgp=new imageprovider(*mpg,new dvbcutbusy(this),false,viewscalefactor);
+
     QPixmap px=imgp->getimage(curpic,fine);
     imagedisplay->setMinimumSize(px.size());
     imagedisplay->setPixmap(px);
     qApp->processEvents();
+
+    if (!frameseq_->imgp())
+      frameseq_->imgp(new imageprovider(*mpg, new dvbcutbusy(this), false, viewscalefactor * 7.));
+
+    frameseq_->update(curpic);
   }
 }
 
@@ -1672,6 +1748,8 @@ void dvbcut::open(std::list<std::string> filenames, std::string idxfilename, std
     delete imgp;
     imgp=0;
   }
+
+  frameseq_->imgp(0);
   eventlist->clear();
   imagedisplay->setBackgroundMode(Qt::PaletteBackground);
   imagedisplay->setMinimumSize(QSize(0,0));
@@ -1728,6 +1806,11 @@ void dvbcut::open(std::list<std::string> filenames, std::string idxfilename, std
   gobutton->setEnabled(false);
   goinput2->setEnabled(false);
   gobutton2->setEnabled(false);
+  frameseqbutton->setEnabled(false);
+  frameseqinput->setEnabled(false);
+  frameseqprev->setEnabled(false);
+  frameseqnext->setEnabled(false);
+  frameseqhome->setEnabled(false);
   linslider->setEnabled(false);
   jogslider->setEnabled(false);
 
@@ -2019,14 +2102,8 @@ void dvbcut::open(std::list<std::string> filenames, std::string idxfilename, std
       else
         continue;
       bool okay=false;
-      int picnum;
       QString str=e.attribute("picture","-1");
-      if (str.contains(':') || str.contains('.')) {
-        okay=true;
-        picnum=string2pts(str)/getTimePerFrame();
-      }
-      else
-        picnum=str.toInt(&okay,0);
+      int picnum = string2frameno(okay, str);
       if (okay && picnum>=0 && picnum<pictures) {
         new EventListItem(eventlist,imgp->getimage(picnum),evt,picnum,(*mpg)[picnum].getpicturetype(),(*mpg)[picnum].getpts()-firstpts);
         qApp->processEvents();
@@ -2076,6 +2153,11 @@ void dvbcut::open(std::list<std::string> filenames, std::string idxfilename, std
   gobutton->setEnabled(true);
   goinput2->setEnabled(true);
   gobutton2->setEnabled(true);
+  frameseqbutton->setEnabled(true);
+  frameseqinput->setEnabled(true);
+  frameseqprev->setEnabled(true);
+  frameseqnext->setEnabled(true);
+  frameseqhome->setEnabled(true);
   linslider->setEnabled(true);
   jogslider->setEnabled(true);
 
@@ -2467,4 +2549,29 @@ void dvbcut::helpContentAction_activated()
     QMessageBox::information(this, tr("dvbcut"),
       tr("Help file %1 not available").arg(helpFile));
   }
+}
+
+int dvbcut::string2frameno(const QString &s, int default_value)
+{
+	bool valid;
+	int frameno = string2frameno(valid, s);
+	return valid ? frameno : default_value;
+}
+
+int dvbcut::string2frameno(bool &valid, const QString &s)
+{
+  if (s.contains(':') || s.contains('.')) {
+    valid = true;
+    return string2pts(s.stripWhiteSpace()) / getTimePerFrame();
+  }
+
+  return s.toInt(&valid, 0);
+}
+
+void dvbcut::gotoFrame(int frameno)
+{
+  bool save = fine;
+  fine = true;
+  linslider->setValue(frameno);
+  fine = save;
 }

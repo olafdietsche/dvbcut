@@ -363,6 +363,105 @@
                             </widget>
                         </hbox>
                     </widget>
+                    <widget class="QLayoutWidget">
+                        <property name="name">
+                            <cstring>layout6</cstring>
+                        </property>
+                        <hbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <spacer>
+                                <property name="name">
+                                    <cstring>spacer6</cstring>
+                                </property>
+                                <property name="orientation">
+                                    <enum>Horizontal</enum>
+                                </property>
+                                <property name="sizeType">
+                                    <enum>Expanding</enum>
+                                </property>
+                                <property name="sizeHint">
+                                    <size>
+                                        <width>2</width>
+                                        <height>10</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                            <widget class="QPushButton">
+                                <property name="name">
+                                    <cstring>frameseqprev</cstring>
+                                </property>
+                                <property name="enabled">
+                                    <bool>false</bool>
+                                </property>
+                                <property name="text">
+                                    <string>Previous</string>
+                                </property>
+                            </widget>
+			    <widget class="QComboBox">
+				<property name="name">
+				    <cstring>frameseqinput</cstring>
+				</property>
+				<property name="editable">
+				    <bool>true</bool>
+				</property>
+				<property name="duplicatesEnabled">
+				    <bool>false</bool>
+				</property>
+			    </widget>
+                            <widget class="QPushButton">
+                                <property name="name">
+                                    <cstring>frameseqbutton</cstring>
+                                </property>
+                                <property name="enabled">
+                                    <bool>false</bool>
+                                </property>
+                                <property name="text">
+                                    <string>go</string>
+                                </property>
+                            </widget>
+                            <widget class="QPushButton">
+                                <property name="name">
+                                    <cstring>frameseqnext</cstring>
+                                </property>
+                                <property name="enabled">
+                                    <bool>false</bool>
+                                </property>
+                                <property name="text">
+                                    <string>Next</string>
+                                </property>
+                            </widget>
+                            <widget class="QPushButton">
+                                <property name="name">
+                                    <cstring>frameseqhome</cstring>
+                                </property>
+                                <property name="enabled">
+                                    <bool>false</bool>
+                                </property>
+                                <property name="text">
+                                    <string>Home</string>
+                                </property>
+                            </widget>
+                            <spacer>
+                                <property name="name">
+                                    <cstring>spacer6</cstring>
+                                </property>
+                                <property name="orientation">
+                                    <enum>Horizontal</enum>
+                                </property>
+                                <property name="sizeType">
+                                    <enum>Expanding</enum>
+                                </property>
+                                <property name="sizeHint">
+                                    <size>
+                                        <width>2</width>
+                                        <height>10</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                        </hbox>
+                    </widget>
                 </vbox>
             </widget>
         </widget>
@@ -1159,6 +1258,36 @@
         <slot>clickedgo2()</slot>
     </connection>
     <connection>
+        <sender>frameseqbutton</sender>
+        <signal>clicked()</signal>
+        <receiver>dvbcutbase</receiver>
+        <slot>clickedframeseq()</slot>
+    </connection>
+    <connection>
+        <sender>frameseqinput</sender>
+        <signal>activated(const QString&amp;)</signal>
+        <receiver>dvbcutbase</receiver>
+        <slot>clickedframeseq()</slot>
+    </connection>
+    <connection>
+        <sender>frameseqprev</sender>
+        <signal>clicked()</signal>
+        <receiver>dvbcutbase</receiver>
+        <slot>clickedframeseqprev()</slot>
+    </connection>
+    <connection>
+        <sender>frameseqnext</sender>
+        <signal>clicked()</signal>
+        <receiver>dvbcutbase</receiver>
+        <slot>clickedframeseqnext()</slot>
+    </connection>
+    <connection>
+        <sender>frameseqhome</sender>
+        <signal>clicked()</signal>
+        <receiver>dvbcutbase</receiver>
+        <slot>clickedframeseqhome()</slot>
+    </connection>
+    <connection>
         <sender>playPlayAction</sender>
         <signal>activated()</signal>
         <receiver>dvbcutbase</receiver>
@@ -1306,6 +1435,10 @@
     <slot>eventlistcontextmenu(QListBoxItem *, const QPoint &amp;)</slot>
     <slot>clickedgo()</slot>
     <slot>clickedgo2()</slot>
+    <slot>clickedframeseq()</slot>
+    <slot>clickedframeseqprev()</slot>
+    <slot>clickedframeseqnext()</slot>
+    <slot>clickedframeseqhome()</slot>
     <slot>playPlay()</slot>
     <slot>playStop()</slot>
     <slot>playAudio1()</slot>

@@ -71,7 +71,8 @@ MOC = \
 	moc_mplayererrorbase.cpp \
 	moc_progressstatusbar.cpp \
 	moc_progresswindow.cpp \
-	moc_progresswindowbase.cpp
+	moc_progresswindowbase.cpp \
+	moc_framesequence.cpp
 
 UIC = \
 	uic_dvbcutbase.cpp \
@@ -85,7 +86,8 @@ SRCS = \
 	imageprovider.cpp index.cpp lavfmuxer.cpp logoutput.cpp \
 	main.cpp mpegmuxer.cpp mpgfile.cpp playaudio.cpp \
 	progressstatusbar.cpp progresswindow.cpp psfile.cpp \
-	pts.cpp streamdata.cpp tsfile.cpp settings.cpp $(MOC) $(UIC) \
+	pts.cpp streamdata.cpp tsfile.cpp settings.cpp framesequence.cpp \
+	$(MOC) $(UIC) \
 	$(STDLIB)
 
 OBJS = $(SRCS:.cpp=.$(OBJEXT))

@@ -58,6 +58,11 @@
 #define DVBCUT_DEFAULT_PIPE_LABEL \
         "DVD-Video titleset (dvdauthor)"
 #define DVBCUT_DEFAULT_PIPE_FORMAT (0)
+
+#define DVBCUT_DEFAULT_FRAMESEQ_NFRAMES 7
+#define DVBCUT_DEFAULT_FRAMESEQ_HOME_DISTANCE "1:0"
+#define DVBCUT_DEFAULT_FRAMESEQ_DISTANCES "1 0:1 0:10 1:0 5:0"
+
 /* 
 // SOME OTHER EXAMPLES for the settings file ~/.qt/dvbcut.sf.netrc 
 // (ok, for time consuming conversions one does not save any time, but it may be convenient...) 
@@ -284,6 +289,11 @@ dvbcut_settings::load_settings() {
     // minimal length of a chapter
     chapter_minimum = readNumEntry("/minimum", 200*25);
   endGroup();	// auto chapters
+  beginGroup("/frameseq");
+    frameseq_nframes = readNumEntry("/nframes", DVBCUT_DEFAULT_FRAMESEQ_NFRAMES);
+    frameseq_home_distance = readEntry("/home_distance", DVBCUT_DEFAULT_FRAMESEQ_HOME_DISTANCE);
+    frameseq_distances = readEntry("/distances", DVBCUT_DEFAULT_FRAMESEQ_DISTANCES);
+  endGroup();	// frameseq
 }
 
 void
@@ -380,6 +390,11 @@ dvbcut_settings::save_settings() {
     writeEntry("/threshold", chapter_threshold);
     writeEntry("/minimum", chapter_minimum);
   endGroup();	// auto chapters
+  beginGroup("/frameseq");
+    writeEntry("/nframes", frameseq_nframes);
+    writeEntry("/home_distance", frameseq_home_distance);
+    writeEntry("/distances", frameseq_distances);
+  endGroup();	// frameseq
 }
 
 // private settings variable

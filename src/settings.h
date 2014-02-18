@@ -85,7 +85,9 @@ public:
   int chapter_tolerance;
   double chapter_threshold;
   int chapter_minimum;
-
+  int frameseq_nframes;
+  QString frameseq_home_distance;
+  QString frameseq_distances;
 };
 
 // access function

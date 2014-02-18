@@ -31,6 +31,7 @@
 
 class QProcess;
 class imageprovider;
+class framesequence;
 
 class dvbcut: public dvbcutbase
   {
@@ -102,6 +103,7 @@ protected:
   int exportformat; 
   bool start_bof; 
   bool stop_eof; 
+  framesequence *frameseq_;
 
 protected:
   //   QPixmap getpixmap(int picture, bool allgop=false);
@@ -145,6 +147,10 @@ public:
   // static dvbcut *New(std::string filename=std::string(), std::string idxfilename=std::string());
   void addStartStopItems(std::vector<int>, int option=0);
   int getTimePerFrame() { return timeperframe>0 && timeperframe<5000 ? timeperframe : 3003; };
+  int string2frameno(const QString &s, int default_value);
+  int string2frameno(bool &valid, const QString &s);
+  void gotoFrame(int frameno);
+  void updateframeseqbuttons();
 
 public slots:
   virtual void fileNew();
@@ -186,6 +192,10 @@ public slots:
   virtual void mplayer_readstdout();
   virtual void clickedgo();
   virtual void clickedgo2();
+  virtual void clickedframeseq();
+  virtual void clickedframeseqprev();
+  virtual void clickedframeseqnext();
+  virtual void clickedframeseqhome();
   virtual void updateimagedisplay();
   virtual void audiotrackchosen(int id);
   virtual void loadrecentfile(int id);
