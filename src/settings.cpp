@@ -234,6 +234,7 @@ dvbcut_settings::load_settings() {
   endGroup();	// labels
   start_bof = readBoolEntry("/start_bof", true);
   stop_eof = readBoolEntry("/stop_eof", true);
+  create_index_file = readBoolEntry("create_index_file", true);
   beginGroup("/snapshots");
     snapshot_type = readEntry("/type", "PNG");
     snapshot_quality = readNumEntry("/quality", -1);
@@ -352,6 +353,7 @@ dvbcut_settings::save_settings() {
   endGroup();	// labels
   writeEntry("/start_bof", start_bof);
   writeEntry("/stop_eof", stop_eof);
+  writeEntry("/create_index_file", create_index_file);
   beginGroup("/snapshots");
     writeEntry("/type", snapshot_type);
     writeEntry("/quality", snapshot_quality);

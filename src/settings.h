@@ -86,6 +86,7 @@ public:
   double chapter_threshold;
   int chapter_minimum;
 
+  bool create_index_file;
 };
 
 // access function
