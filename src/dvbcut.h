@@ -165,6 +165,7 @@ public slots:
   virtual void editConvert(int);
   virtual void abouttoshoweditconvert();
   virtual void viewDifference();
+  virtual void searchDuplicate();
   virtual void viewUnscaled();
   virtual void viewNormal();
   virtual void zoomIn();

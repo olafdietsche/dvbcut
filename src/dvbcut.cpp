@@ -1050,6 +1050,84 @@ void dvbcut::viewDifference()
   updateimagedisplay();
 }
 
+namespace {
+inline int square(int x)
+{
+	return x * x;
+}
+
+unsigned long calc_distance(QImage baseimg, QImage im)
+{
+	if (im.size() != baseimg.size())
+		im = im.scale(baseimg.size());
+
+	unsigned long distance = 0;
+	if (im.depth() == 32 && baseimg.depth() == 32)
+		for (int y = 0; y < baseimg.height(); ++y) {
+			QRgb *imd = (QRgb*) im.scanLine(y);
+			QRgb *bimd = (QRgb*) baseimg.scanLine(y);
+
+			for (int x = im.width(); x > 0; --x) {
+				int dist = square(qRed(*imd) - qRed(*bimd)) + square(qGreen(*imd) - qGreen(*bimd)) + square(qBlue(*imd) - qBlue(*bimd));
+				if (dist > 1000)
+					dist = 1000;
+
+				distance += dist;
+				++imd;
+				++bimd;
+			}
+		}
+
+	return distance;
+}
+
+int getNextEvent(const QListBox *eventlist, int picture)
+{
+	for (QListBoxItem *item = eventlist->firstItem(); item; item = item->next())
+		if (item->rtti() == EventListItem::RTTI()) {
+			EventListItem *eli = (EventListItem*)item;
+			if (eli->getpicture() > picture)
+				return eli->getpicture();
+		}
+
+	return picture + 1;
+}
+};
+
+void dvbcut::searchDuplicate()
+{
+	progressstatusbar psb(statusBar());
+	psb.print("Searching ...");
+	psb.setprogress(0);
+//	dvbcutbusy busy(this);
+//	busy.setbusy(true);
+	imageprovider imgp(*mpg);
+	QImage baseimg = imgp.getimage(curpic);
+	int pic = getNextEvent(eventlist, curpic);
+	gotoFrame(pic);
+	unsigned long min = calc_distance(baseimg, imgp.getimage(pic, true));
+	static const long n = settings().search_dups_range;
+	for (long i = 0; i < n; ++i) {
+		unsigned long d = calc_distance(baseimg, imgp.getimage(++pic, true));
+		if (d < min) {
+			min = d;
+			gotoFrame(pic);
+		}
+
+		psb.setprogress(i * 1000 / n);
+		if (psb.cancelled()) {
+			// FIXME
+			break;
+		}
+	}
+
+//	busy.setbusy(false);
+	if (psb.cancelled()) {
+		// FIXME
+		return;
+	}
+}
+
 
 void dvbcut::viewUnscaled()
 {
@@ -2467,4 +2545,12 @@ void dvbcut::helpContentAction_activated()
     QMessageBox::information(this, tr("dvbcut"),
       tr("Help file %1 not available").arg(helpFile));
   }
+}
+
+void dvbcut::gotoFrame(int frameno)
+{
+  bool save = fine;
+  fine = true;
+  linslider->setValue(frameno);
+  fine = save;
 }

@@ -470,6 +470,7 @@
         <action name="viewNormalAction"/>
         <action name="viewUnscaledAction"/>
         <action name="viewDifferenceAction"/>
+        <action name="searchDuplicateAction"/>
         <separator/>
         <action name="zoomInAction"/>
         <action name="zoomOutAction"/>
@@ -860,6 +861,14 @@
     </action>
     <action>
         <property name="name">
+            <cstring>searchDuplicateAction</cstring>
+        </property>
+        <property name="text">
+            <string>Search duplicate of current picture</string>
+        </property>
+    </action>
+    <action>
+        <property name="name">
             <cstring>viewFullSizeAction</cstring>
         </property>
         <property name="toggleAction">
@@ -1207,6 +1216,12 @@
         <slot>viewDifference()</slot>
     </connection>
     <connection>
+        <sender>searchDuplicateAction</sender>
+        <signal>activated()</signal>
+        <receiver>dvbcutbase</receiver>
+        <slot>searchDuplicate()</slot>
+    </connection>
+    <connection>
         <sender>viewNormalAction</sender>
         <signal>activated()</signal>
         <receiver>dvbcutbase</receiver>
@@ -1319,6 +1334,7 @@
     <slot>viewNormal()</slot>
     <slot>viewUnscaled()</slot>
     <slot>viewDifference()</slot>
+    <slot>searchDuplicate()</slot>
     <slot>fileExport()</slot>
     <slot>audiotrackchosen(int)</slot>
     <slot>loadrecentfile(int)</slot>

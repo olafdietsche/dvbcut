@@ -58,6 +58,7 @@
 #define DVBCUT_DEFAULT_PIPE_LABEL \
         "DVD-Video titleset (dvdauthor)"
 #define DVBCUT_DEFAULT_PIPE_FORMAT (0)
+#define DVBCUT_DEFAULT_SEARCH_DUPS_RANGE 1500
 /* 
 // SOME OTHER EXAMPLES for the settings file ~/.qt/dvbcut.sf.netrc 
 // (ok, for time consuming conversions one does not save any time, but it may be convenient...) 
@@ -130,6 +131,7 @@ dvbcut_settings::load_settings() {
       prjfilter = readEntry("/prjfilter", DVBCUT_DEFAULT_PRJFILTER);
       loadfilter = readEntry("/loadfilter", DVBCUT_DEFAULT_LOADFILTER);
     endGroup();	// filter
+    search_dups_range = readNumEntry("/search_dups_range", DVBCUT_DEFAULT_SEARCH_DUPS_RANGE);
   }
   else {
     // old (unnumbered) config format
@@ -380,6 +382,7 @@ dvbcut_settings::save_settings() {
     writeEntry("/threshold", chapter_threshold);
     writeEntry("/minimum", chapter_minimum);
   endGroup();	// auto chapters
+  writeEntry("/search_dups_range", search_dups_range);
 }
 
 // private settings variable
