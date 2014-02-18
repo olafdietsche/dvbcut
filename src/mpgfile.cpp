@@ -115,7 +115,7 @@ void mpgfile::decodegop(int start, int stop, std::list<avframe*> &framelist)
     sd->discard(idx[streampic].getpos().packetoffset());
   }
 
-  if (int rv=avcodec_open(S->avcc, S->dec))
+  if (int rv=avcodec_open2(S->avcc, S->dec, NULL)) // FIXME: options
   {
     fprintf(stderr,"avcodec_open returned %d\n",rv);
     return;
@@ -154,24 +154,26 @@ void mpgfile::decodegop(int start, int stop, std::list<avframe*> &framelist)
 
     if (!firstsequence || idx[streampic].getsequencenumber()>=seqnr)
     {
-      const uint8_t *data=(const uint8_t*)sd->getdata();
       int frameFinished=0;
 
-      int decodebytes=bytes;
-      while (decodebytes>0)
+      AVPacket avpkt;
+      av_init_packet(&avpkt);
+      avpkt.data = (uint8_t*)sd->getdata();
+      avpkt.size = bytes;
+      while (avpkt.size > 0)
       {
         frameFinished=0;
-        int bytesDecoded=avcodec_decode_video(S->avcc, avf, &frameFinished,
-                                              (uint8_t*) data, decodebytes);
-        if (bytesDecoded<0)
+        int bytesDecoded=avcodec_decode_video2(S->avcc, avf, &frameFinished,
+                                              &avpkt);
+        if (avpkt.size<0)
         {
           fprintf(stderr,"libavcodec error while decoding frame #%d\n",pic);
           avcodec_close(S->avcc);
           return;
         }
 
-        data+=bytesDecoded;
-        decodebytes-=bytesDecoded;
+        avpkt.data += bytesDecoded;
+        avpkt.size -= bytesDecoded;
 
         if (frameFinished)
         {
@@ -184,7 +186,7 @@ void mpgfile::decodegop(int start, int stop, std::list<avframe*> &framelist)
             if (pic>=stop)
             {
               frameFinished=0;
-              decodebytes=0;
+              avpkt.size = 0;
               break;
             }
           }
@@ -200,8 +202,12 @@ void mpgfile::decodegop(int start, int stop, std::list<avframe*> &framelist)
 
   if (pic < stop)
   {
+    AVPacket avpkt;
+    av_init_packet(&avpkt);
+    avpkt.data = NULL;
+    avpkt.size = 0;
     int frameFinished=0;
-    avcodec_decode_video(S->avcc, avf, &frameFinished, NULL, 0);
+    avcodec_decode_video2(S->avcc, avf, &frameFinished, &avpkt);
     if (frameFinished)
     {
       if (last_cpn!=avf->coded_picture_number)
@@ -248,7 +254,7 @@ void mpgfile::initcodeccontexts(int vid)
     stream *S=&s[VIDEOSTREAM];
     S->id=vid;
     S->allocavcc();
-    S->avcc->codec_type=CODEC_TYPE_VIDEO;
+    S->avcc->codec_type=AVMEDIA_TYPE_VIDEO;
     S->avcc->codec_id=CODEC_ID_MPEG2VIDEO;
     S->dec=avcodec_find_decoder(CODEC_ID_MPEG2VIDEO);
     S->enc=avcodec_find_encoder(CODEC_ID_MPEG2VIDEO);
@@ -699,7 +705,7 @@ void mpgfile::recodevideo(muxer &mux, int start, int stop, pts_t offset,int save
     return;
   s[VIDEOSTREAM].setvideoencodingparameters();
 
-  if (int rv=avcodec_open(avcc, s[VIDEOSTREAM].enc))
+  if (int rv=avcodec_open2(avcc, s[VIDEOSTREAM].enc, NULL))
   {
     if (log)
       log->printerror("avcodec_open(mpeg2video_encoder) returned %d",rv);
@@ -723,7 +729,7 @@ void mpgfile::recodevideo(muxer &mux, int start, int stop, pts_t offset,int save
       f->pts=idx[idx.indexnr(start+p)].getpts()-startpts;
       f->coded_picture_number=f->display_picture_number=p;
       f->key_frame=(p==0)?1:0;
-      f->pict_type=(p==0)?FF_I_TYPE:FF_P_TYPE;
+      f->pict_type=(p==0)?AV_PICTURE_TYPE_I:AV_PICTURE_TYPE_P;
 
       out = avcodec_encode_video(avcc, buf,
                                  m2v.getsize(), f);
