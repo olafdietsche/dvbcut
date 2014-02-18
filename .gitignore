@@ -1,0 +1,17 @@
+*.o
+autom4te.cache
+bin/
+config.log
+config.status
+configure
+dvbcut.desktop
+makefile
+src/moc_*.cpp
+src/uic_*.cpp
+src/version.h
+src/Makefile
+src/dvbcut
+src/dvbcutbase.h
+src/exportdialogbase.h
+src/mplayererrorbase.h
+src/progresswindowbase.h
