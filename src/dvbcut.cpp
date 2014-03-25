@@ -1081,12 +1081,12 @@ unsigned long calc_distance(QImage baseimg, QImage im)
 	return distance;
 }
 
-int getNextEvent(const QListBox *eventlist, int picture)
+int getNextEvent(const QListBox *eventlist, int picture, const EventListItem::eventtype evtype)
 {
 	for (QListBoxItem *item = eventlist->firstItem(); item; item = item->next())
 		if (item->rtti() == EventListItem::RTTI()) {
 			EventListItem *eli = (EventListItem*)item;
-			if (eli->getpicture() > picture)
+			if (eli->geteventtype() == evtype && eli->getpicture() > picture)
 				return eli->getpicture();
 		}
 
@@ -1103,7 +1103,7 @@ void dvbcut::searchDuplicate()
 //	busy.setbusy(true);
 	imageprovider imgp(*mpg);
 	QImage baseimg = imgp.getimage(curpic);
-	int pic = getNextEvent(eventlist, curpic);
+	int pic = getNextEvent(eventlist, curpic, EventListItem::start);
 	gotoFrame(pic);
 	unsigned long min = calc_distance(baseimg, imgp.getimage(pic, true));
 	static const long n = settings().search_dups_range;
