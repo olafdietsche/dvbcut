@@ -255,9 +255,9 @@ void mpgfile::initcodeccontexts(int vid)
     S->id=vid;
     S->allocavcc();
     S->avcc->codec_type=AVMEDIA_TYPE_VIDEO;
-    S->avcc->codec_id=CODEC_ID_MPEG2VIDEO;
-    S->dec=avcodec_find_decoder(CODEC_ID_MPEG2VIDEO);
-    S->enc=avcodec_find_encoder(CODEC_ID_MPEG2VIDEO);
+    S->avcc->codec_id=AV_CODEC_ID_MPEG2VIDEO;
+    S->dec=avcodec_find_decoder(AV_CODEC_ID_MPEG2VIDEO);
+    S->enc=avcodec_find_encoder(AV_CODEC_ID_MPEG2VIDEO);
     S->type=streamtype::mpeg2video;
     }
 
@@ -692,6 +692,22 @@ void mpgfile::savempg(muxer &mux, int start, int stop, int savedpics, int savepi
     mux.setpts(audiostream(a), audiostoppts[a]-audiooffset[a]);
 }
 
+static int encode_frame(AVCodecContext *c, AVFrame *frame)
+{
+    AVPacket pkt = { 0 };
+    int ret, got_output;
+
+    av_init_packet(&pkt);
+    av_init_packet(&pkt);
+    ret = avcodec_encode_video2(c, &pkt, frame, &got_output);
+    if (ret < 0)
+        return ret;
+
+    ret = pkt.size;
+    av_free_packet(&pkt);
+    return ret;
+}
+
 void mpgfile::recodevideo(muxer &mux, int start, int stop, pts_t offset,int savedpics,int savepics, logoutput *log)
 {
   if (log)
@@ -731,8 +747,7 @@ void mpgfile::recodevideo(muxer &mux, int start, int stop, pts_t offset,int save
       f->key_frame=(p==0)?1:0;
       f->pict_type=(p==0)?AV_PICTURE_TYPE_I:AV_PICTURE_TYPE_P;
 
-      out = avcodec_encode_video(avcc, buf,
-                                 m2v.getsize(), f);
+      out = encode_frame(avcc, f);
 
       delete framelist.front();
       framelist.pop_front();
@@ -744,8 +759,7 @@ void mpgfile::recodevideo(muxer &mux, int start, int stop, pts_t offset,int save
     else
     {
       fprintf(stderr,"trying to call avcodec_encode_video with frame=0\n");
-      out = avcodec_encode_video(avcc, buf,
-                                 m2v.getsize(), 0);
+      out = encode_frame(avcc, 0);
       fprintf(stderr,"...back I am.\n");
 
       if (out<=0)

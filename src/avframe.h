@@ -39,7 +39,7 @@ protected:
   AVFrame *f;
   void *tobefreed;
   int w,h,dw;
-  enum PixelFormat pix_fmt;
+  enum AVPixelFormat pix_fmt;
 #ifdef HAVE_LIB_SWSCALE
   struct SwsContext *img_convert_ctx;
 #endif
@@ -69,7 +69,7 @@ public:
     {
     return dw;
     }
-  enum PixelFormat getpixfmt() const
+  enum AVPixelFormat getpixfmt() const
     {
     return pix_fmt;
     }

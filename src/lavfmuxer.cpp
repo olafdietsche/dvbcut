@@ -55,7 +55,8 @@ lavfmuxer::lavfmuxer(const char *format, uint32_t audiostreammask, mpgfile &mpg,
   int id=0;
 
   st[VIDEOSTREAM].stream_index=id;
-  AVStream *s=st[VIDEOSTREAM].avstr=av_new_stream(avfc,id++);
+  AVStream *s=st[VIDEOSTREAM].avstr=avformat_new_stream(avfc,NULL);
+  s->id = id++;
   strpres[VIDEOSTREAM]=true;
   av_free(s->codec);
   mpg.setvideoencodingparameters();
@@ -69,7 +70,8 @@ lavfmuxer::lavfmuxer(const char *format, uint32_t audiostreammask, mpgfile &mpg,
     if (audiostreammask & (1u<<i)) {
       int astr=audiostream(i);
       st[astr].stream_index=id;
-      s=st[astr].avstr=av_new_stream(avfc,id++);
+      s=st[astr].avstr=avformat_new_stream(avfc,NULL);
+      s->id = id++;
       strpres[astr]=true;
       if (s->codec)
         av_free(s->codec);
@@ -77,7 +79,7 @@ lavfmuxer::lavfmuxer(const char *format, uint32_t audiostreammask, mpgfile &mpg,
       avcodec_get_context_defaults3(s->codec, NULL);
       s->codec->codec_type=AVMEDIA_TYPE_AUDIO;
       s->codec->codec_id = (mpg.getstreamtype(astr)==streamtype::ac3audio) ?
-	CODEC_ID_AC3 : CODEC_ID_MP2;
+	AV_CODEC_ID_AC3 : AV_CODEC_ID_MP2;
       s->codec->rc_buffer_size = 224*1024*8;
 
       // Must read some packets to get codec parameters
@@ -94,12 +96,13 @@ lavfmuxer::lavfmuxer(const char *format, uint32_t audiostreammask, mpgfile &mpg,
 	  if (!avcodec_open2(s->codec,
 			     avcodec_find_decoder(s->codec->codec_id),
 			     NULL)) {
-	    int16_t samples[MAX_AUDIO_FRAME_SIZE/sizeof(int16_t)];
-	    int frame_size=sizeof(samples);
+	    AVFrame *frame = av_frame_alloc();
+	    int got_frame_ptr;
 	    //fprintf(stderr, "** decode audio size=%d\n", sd->inbytes());
 	    avpkt.data = (uint8_t*) sd->getdata();
 	    avpkt.size = sd->inbytes();
-	    avcodec_decode_audio3(s->codec,samples,&frame_size,&avpkt);
+	    avcodec_decode_audio4(s->codec, frame, &got_frame_ptr, &avpkt);
+	    av_frame_free(&frame);
 	    avcodec_close(s->codec);
 	  }
 	  break;
